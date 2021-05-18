@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+
+        <!-- Babylon.js -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/ammo.js"></script>
+        <script src="https://preview.babylonjs.com/cannon.js"></script>
+        <script src="https://preview.babylonjs.com/Oimo.js"></script>
+        <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+        <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+        <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+        <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+        const createScene = function () {
+    
+    const scene = new BABYLON.Scene(engine);
+
+    /* Projeto AC2                            **
+    ** Cainã Antunes Silva         RA160831   **
+    ** Felipe Martins de Almeida   RA 171703  */
+
+    //LargeGround
+    const largeGroundMat = new BABYLON.StandardMaterial("largeGroundMat");
+    largeGroundMat.diffuseTexture = new BABYLON.Texture("textures/moon_texture.jpg");
+    
+    const largeGround = BABYLON.MeshBuilder.CreateGroundFromHeightMap
+    ("largeGround", "https://assets.babylonjs.com/environments/villageheightmap.png", 
+    {width:50, height:50, subdivisions: 10, minHeight:0, maxHeight: 3.5});
+    largeGround.material = largeGroundMat;
+
+    //Camera
+    const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 3, Math.PI / 2, 12, new BABYLON.Vector3(0, 1, 0));
+    camera.upperBetaLimit = Math.PI / 2 ;
+    camera.attachControl(canvas, true);
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0 , 1, 0.8));
+    
+    //Skybox
+    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:50}, scene);
+	  const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+	  skyboxMaterial.backFaceCulling = false;
+	  skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("textures/skybox", scene);
+	  skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+	  skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+	  skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+	  skybox.material = skyboxMaterial;
+
+    // Meshe 01 - Ball
+    BABYLON.SceneLoader.ImportMesh
+    ( null, "https://models.babylonjs.com/shaderBall/", "BabylonShaderBall_Simple.gltf", scene, function(newMeshes){
+        var shaderBall = newMeshes[0];
+        shaderBall.scaling.scaleInPlace(0.3);
+        shaderBall.position.y = 0.5;
+        shaderBall.position.x = 8; 
+    });
+
+    // Meshe 02 - UFO
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://models.babylonjs.com/", "ufo.glb", scene, function (newMeshes) 
+    {          
+        var ufo = newMeshes[0];
+        ufo.scaling.scaleInPlace(5);
+        ufo.position.y = 0.5;
+        ufo.position.x = -8;
+        ufo.position.z = 2.5;
+    });
+
+    // Meshe 03 - Marble
+    BABYLON.SceneLoader.ImportMesh(
+        null, "https://models.babylonjs.com/Marble/marble/", "marble.gltf", scene, function (newMeshes) 
+    {          
+        var marble = newMeshes[0];
+        marble.scaling.scaleInPlace(1);
+        marble.position.y = 1;
+        marble.position.x = -8;
+        marble.position.z = 2.5;
+    });
+
+    //Meshe 04 - Barrel
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://models.babylonjs.com/", "ExplodingBarrel.glb", scene, function (newMeshes) 
+    {
+        var ExplodingBarrel = newMeshes[0];
+        ExplodingBarrel.scaling.scaleInPlace(0.015);
+        ExplodingBarrel.position.x = -10;
+        ExplodingBarrel.position.z = -10;
+    });
+
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://models.babylonjs.com/", "ExplodingBarrel.glb", scene, function (newMeshes) 
+    {
+        var ExplodingBarrel = newMeshes[0];
+        ExplodingBarrel.scaling.scaleInPlace(0.015);
+        ExplodingBarrel.position.x =  10;
+        ExplodingBarrel.position.z = -10;
+    });
+
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://models.babylonjs.com/", "ExplodingBarrel.glb", scene, function (newMeshes) 
+    {
+        var ExplodingBarrel = newMeshes[0];
+        ExplodingBarrel.scaling.scaleInPlace(0.015);
+        ExplodingBarrel.position.x = -10;
+        ExplodingBarrel.position.z = 10;
+    });
+
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://models.babylonjs.com/", "ExplodingBarrel.glb", scene, function (newMeshes) 
+    {
+        var ExplodingBarrel = newMeshes[0];
+        ExplodingBarrel.scaling.scaleInPlace(0.015);
+        ExplodingBarrel.position.x = 10;
+        ExplodingBarrel.position.z = 10;
+    });
+
+    // Meshe 05 - Dragon
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://models.babylonjs.com/Georgia-Tech-Dragon/", "dragon.babylon", scene, function (newMeshes) 
+    {          
+        var dragon = newMeshes[0];
+        dragon.scaling.scaleInPlace(15);
+        dragon.position.z = 10;
+    });
+
+    // Meshe 06 - ClothFolds
+
+    BABYLON.SceneLoader.ImportMesh
+    ( null, "https://models.babylonjs.com/", "clothFolds.glb", scene, function (newMeshes) 
+    {
+        var clothFolds = newMeshes[0];
+        clothFolds.scaling.scaleInPlace(1);
+        clothFolds.position.x = -10;
+        clothFolds.position.z = -3;
+    });
+
+    // Meshe 07 - Allien
+
+    BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "alien.glb", scene, function (newMeshes) {          
+        var Allien = newMeshes[0];
+        Allien.scaling.scaleInPlace(3);
+        Allien.position.x = -1.5;
+        Allien.position.z = -5.5;
+        Allien.position.y = 1.5;
+        
+    });
+
+    // Keyboard events
+    var inputMap = {};
+    scene.actionManager = new BABYLON.ActionManager(scene);
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+        inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+    }));
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+        inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+    }));
+
+
+    // Load hero character
+    BABYLON.SceneLoader.ImportMesh
+    ("", "https://assets.babylonjs.com/meshes/", "HVGirl.glb", 
+    scene, function (newMeshes, particleSystems, skeletons, animationGroups) 
+    {
+        var hero = newMeshes[0];
+
+        //Scale the model down        
+        hero.scaling.scaleInPlace(0.08);
+        
+        //Lock camera on the character 
+        //camera1.target = hero;
+
+        //Hero character variables 
+        var heroSpeed = 0.03;
+        var heroSpeedBackwards = 0.009;
+        var heroRotationSpeed = 0.03;
+        var limite = 10;
+
+        var animating = true;
+
+        const walkAnim = scene.getAnimationGroupByName("Walking");
+        const walkBackAnim = scene.getAnimationGroupByName("WalkingBack");
+        const idleAnim = scene.getAnimationGroupByName("Idle");
+        const sambaAnim = scene.getAnimationGroupByName("Samba");
+
+        
+
+        //Rendering loop (executed for everyframe)
+        scene.onBeforeRenderObservable.add(() => {
+            var keydown = false;
+            //Manage the movements of the character (e.g. position, direction)
+            if (inputMap["w"] ) {
+                if(hero.position.x > limite)
+                    hero.position.x = limite -0.01;
+                if(hero.position.x < -limite)
+                    hero.position.x = -limite +0.01;
+                if(hero.position.z > limite)
+                    hero.position.z = limite -0.01;
+                if(hero.position.z < -limite)
+                    hero.position.z = -limite +0.01;
+                hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
+                keydown = true;
+            }
+            if (inputMap["s"]) {
+                if(hero.position.x > limite)
+                    hero.position.x = limite -0.01;
+                if(hero.position.x < -limite)
+                    hero.position.x = -limite +0.01;
+                if(hero.position.z > limite)
+                    hero.position.z = limite -0.01;
+                if(hero.position.z < -limite)
+                    hero.position.z = -limite +0.01;
+                hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
+                keydown = true;
+            }
+            if (inputMap["a"]) {
+                hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+                keydown = true;
+            }
+            if (inputMap["d"]) {
+                hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+                keydown = true;
+            }
+            if (inputMap["b"]) {
+                keydown = true;
+            }
+
+            //Manage animations to be played  
+            if (keydown) {
+                if (!animating) {
+                    animating = true;
+                    if (inputMap["s"]) {
+                        //Walk backwards
+                        walkBackAnim.start(true, 1.0, walkBackAnim.from, walkBackAnim.to, false);
+                    }
+                    else if
+                        (inputMap["b"]) {
+                        //Samba!
+                        sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+                    }
+                    else {
+                        //Walk
+                        walkAnim.start(true, 1.0, walkAnim.from, walkAnim.to, false);
+                    }
+                }
+            }
+            else {
+
+                if (animating) {
+                    //Default animation is idle when no key is down     
+                    idleAnim.start(true, 1.0, idleAnim.from, idleAnim.to, false);
+
+                    //Stop all animations besides Idle Anim when no key is down
+                    sambaAnim.stop();
+                    walkAnim.stop();
+                    walkBackAnim.stop();
+
+                    //Ensure animation are played only once per rendering loop
+                    animating = false;
+                }
+            }
+        });
+    });
+
+    return scene;
+};
+                window.initFunction = async function() {               
+                    var asyncEngineCreation = async function() {
+                        try {
+                        return createDefaultEngine();
+                        } catch(e) {
+                        console.log("the available createEngine function failed. Creating the default engine instead");
+                        return createDefaultEngine();
+                        }
+                    }
+
+                    window.engine = await asyncEngineCreation();
+        if (!engine) throw 'engine should not be null.';
+        window.scene = createScene();};
+        initFunction().then(() => {sceneToRender = scene        
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
